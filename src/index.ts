@@ -1,7 +1,3 @@
-export const sample = (): string => {
-  try {
-    return 'Output';
-  } catch {
-    return 'Error';
-  }
-};
+export * from './core.js';
+export * from './sdk.gen.js';
+export type * from './types.gen.js';

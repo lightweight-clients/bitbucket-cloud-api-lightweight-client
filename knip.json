@@ -1,0 +1,9 @@
+{
+  "ignore": [
+    "src/client.gen.ts",
+    "src/sdk.gen.ts",
+    "src/types.gen.ts",
+    "src/client/**",
+    "src/core/**"
+  ]
+}

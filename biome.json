@@ -6,7 +6,8 @@
     "useIgnoreFile": true
   },
   "files": {
-    "ignoreUnknown": true
+    "ignoreUnknown": true,
+    "includes": ["src/core.ts", "src/index.ts", "tests/**/*.ts"]
   },
   "formatter": {
     "indentStyle": "space",

@@ -1,7 +1,7 @@
 {
-  "name": "@lightweight-clients/lightweight-client-playground",
-  "version": "1.0.4",
-  "description": "TODO DESCRIPTION",
+  "name": "@lightweight-clients/bitbucket-cloud-api-lightweight-client",
+  "version": "1.0.0",
+  "description": "Bitbucket Cloud API lightweight client with no runtime dependencies.",
   "source": "src/index.ts",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -39,13 +39,13 @@
   "type": "module",
   "author": "lightweight-clients (https://github.com/lightweight-clients)",
   "license": "MIT",
-  "homepage": "https://github.com/lightweight-clients/lightweight-client-template-repo",
+  "homepage": "https://github.com/lightweight-clients/bitbucket-cloud-api-lightweight-client",
   "repository": {
     "type": "git",
-    "url": "https://github.com/lightweight-clients/lightweight-client-template-repo"
+    "url": "https://github.com/lightweight-clients/bitbucket-cloud-api-lightweight-client.git"
   },
   "bugs": {
-    "url": "https://github.com/lightweight-clients/lightweight-client-template-repo/issues"
+    "url": "https://github.com/lightweight-clients/bitbucket-cloud-api-lightweight-client/issues"
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.4",
@@ -56,5 +56,5 @@
     "typescript": "^6.0.3",
     "vitest": "^4.1.10"
   },
-  "schema_version": "unset-todo"
+  "schema_version": "2.0.0+20260906194000"
 }
