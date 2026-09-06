@@ -5,4 +5,6 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
-Initial setup of the template.
+## 2.0.0
+
+Initial Bitbucket Cloud API 2.0 client release.

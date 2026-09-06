@@ -6,8 +6,7 @@
     "useIgnoreFile": true
   },
   "files": {
-    "ignoreUnknown": true,
-    "includes": ["src/core.ts", "src/index.ts", "tests/**/*.ts"]
+    "ignoreUnknown": true
   },
   "formatter": {
     "indentStyle": "space",
@@ -19,6 +18,7 @@
     }
   },
   "linter": {
+    "includes": ["src/core.ts", "src/index.ts", "tests/**/*.ts"],
     "rules": {
       "preset": "recommended",
       "complexity": {

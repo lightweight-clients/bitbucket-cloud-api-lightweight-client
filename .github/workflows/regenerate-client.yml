@@ -2,16 +2,43 @@ name: Regenerate client
 
 on:
   workflow_dispatch:
+    inputs:
+      force_update:
+        description: Regenerate even when the recorded schema revision is current.
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: write
   pull-requests: write
 
 env:
-  schema_url: https://raw.githubusercontent.com/lightweight-clients/schemas/refs/heads/master/schemas/bitbucket-cloud-api/openapi.json
+  schema_registry_url: https://raw.githubusercontent.com/lightweight-clients/schemas/refs/heads/master/schemas.json
+  schema_name: bitbucket-cloud-api
 
 jobs:
+  compare-versions:
+    runs-on: ubuntu-latest
+    outputs:
+      api_version: ${{ steps.registry.outputs.api_version }}
+      schema_version: ${{ steps.registry.outputs.schema_version }}
+      up_to_date: ${{ steps.client.outputs.schema_version == steps.registry.outputs.schema_version }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          sparse-checkout: package.json
+      - id: client
+        run: echo "schema_version=$(jq -r '.schema_version' package.json)" >> "$GITHUB_OUTPUT"
+      - id: registry
+        run: |
+          schema=$(curl -fsSL "$schema_registry_url" | jq -ce --arg name "$schema_name" '.[$name]')
+          echo "schema_version=$(jq -r '.schema_version' <<< "$schema")" >> "$GITHUB_OUTPUT"
+          echo "api_version=$(jq -r '.source_version' <<< "$schema" | cut -d. -f1,2)" >> "$GITHUB_OUTPUT"
+
   regenerate:
+    needs: compare-versions
+    if: ${{ needs.compare-versions.outputs.up_to_date != 'true' || inputs.force_update }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -21,18 +48,44 @@ jobs:
         with:
           repository: lightweight-clients/bitbucket-cloud-api-lightweight-client-generator
           path: generator
+      - name: Install client dependencies
+        working-directory: client
+        run: npm ci
       - name: Generate client
         working-directory: generator
         run: npm ci && npm start
       - name: Update generated source
         run: cp -R generator/output/. client/src/
+      - name: Format generated source
+        working-directory: client
+        run: npm run lint:fix
       - name: Record schema revision and patch version
         working-directory: client
         run: |
-          schema_version=$(curl -fsSL "$schema_url" | sha256sum | cut -d ' ' -f1)
           npm version patch --no-git-tag-version
-          jq --arg schema_version "$schema_version" '.schema_version = $schema_version' package.json > package.json.tmp
+          jq --arg schema_version '${{ needs.compare-versions.outputs.schema_version }}' '.schema_version = $schema_version' package.json > package.json.tmp
           mv package.json.tmp package.json
+          version=$(jq -r '.version' package.json)
+          awk -v version="$version" '
+            $0 == "## [Unreleased]" {
+              print
+              print ""
+              print "## " version
+              print ""
+              print "Generated client update."
+              next
+            }
+            { print }
+          ' CHANGELOG.md > CHANGELOG.md.tmp
+          mv CHANGELOG.md.tmp CHANGELOG.md
+      - name: Verify API version compatibility
+        working-directory: client
+        run: |
+          client_version=$(jq -r '.version' package.json | cut -d. -f1,2)
+          if [[ "$client_version" != '${{ needs.compare-versions.outputs.api_version }}' ]]; then
+            echo "Client version $client_version does not match API version ${{ needs.compare-versions.outputs.api_version }}"
+            exit 1
+          fi
       - uses: peter-evans/create-pull-request@v7
         with:
           path: client
