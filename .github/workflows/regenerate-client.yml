@@ -8,13 +8,22 @@ on:
         required: false
         default: false
         type: boolean
+      schema_ref:
+        description: Immutable schemas commit to use. Defaults to master for manual recovery.
+        required: false
+        default: master
+        type: string
 
 permissions:
   contents: write
   pull-requests: write
 
+concurrency:
+  group: regenerate-client
+  cancel-in-progress: false
+
 env:
-  schema_registry_url: https://raw.githubusercontent.com/lightweight-clients/schemas/refs/heads/master/schemas.json
+  schema_registry_url: https://raw.githubusercontent.com/lightweight-clients/schemas/${{ inputs.schema_ref }}/schemas.json
   schema_name: bitbucket-cloud-api
 
 jobs:
@@ -48,6 +57,26 @@ jobs:
         with:
           repository: lightweight-clients/bitbucket-cloud-api-lightweight-client-generator
           path: generator
+      - name: Pin generator schema revision
+        working-directory: ./generator
+        env:
+          SCHEMA_REF: ${{ inputs.schema_ref }}
+        run: |
+          python - <<'PY'
+          import os
+          from pathlib import Path
+
+          config = Path("src/config.json")
+          content = config.read_text(encoding="utf-8-sig")
+          marker = "/refs/heads/master/"
+          if marker not in content:
+              raise SystemExit(f"{config} does not contain the expected master schema URL")
+          config.write_text(
+              content.replace(marker, f"/{os.environ['SCHEMA_REF']}/"),
+              encoding="utf-8",
+          )
+          PY
+
       - name: Install client dependencies
         working-directory: client
         run: npm ci
